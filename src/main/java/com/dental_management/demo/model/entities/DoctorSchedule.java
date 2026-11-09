@@ -12,8 +12,8 @@ import java.time.LocalTime;
 @Setter
 @RequiredArgsConstructor
 @Entity
-@Table(name="dentist_schedules")
-public class DentistSchedule {
+@Table(name="doctor_schedule")
+public class DoctorSchedule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

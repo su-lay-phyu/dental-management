@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
@@ -25,10 +26,12 @@ public class Appointment {
     private Doctor doctor;
     @ManyToOne
     @JoinColumn(name="service_id")
-    private Service service;
+    private ServiceEntity serviceEntity;
     private LocalTime startTime;
     private LocalTime endTime;
+    @Enumerated(EnumType.STRING)
     private Status status;
     private String notes;
     private Instant createdAt;
+    private LocalDate appointmentDate;
 }

@@ -30,7 +30,7 @@ public class DoctorBranchService {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id", nullable = false)
-    private Service service;
+    private ServiceEntity serviceEntity;
 
     @Enumerated(EnumType.STRING)
     private Status status;
