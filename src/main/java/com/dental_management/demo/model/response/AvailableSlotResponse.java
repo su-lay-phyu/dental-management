@@ -15,11 +15,25 @@ public class AvailableSlotResponse {
 
     private LocalDate date;
 
-    private Long doctorId;
-
     private Long branchId;
 
-    private Long serviceId;
+    private List<Long> serviceIds;
 
-    private List<LocalTime> availableSlots;
+    private int totalDuration;
+
+    private List<SessionSlots> sessions;
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    public static class SessionSlots {
+
+        private String sessionName;
+
+        private LocalTime startTime;
+
+        private LocalTime endTime;
+
+        private List<LocalTime> availableSlots;
+    }
 }

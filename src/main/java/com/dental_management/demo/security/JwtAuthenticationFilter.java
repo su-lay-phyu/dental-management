@@ -23,6 +23,23 @@ public class JwtAuthenticationFilter
 
     private final UserDetailsService userDetailsService;
 
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+
+        String path = request.getServletPath();
+
+        if (path.startsWith("/swagger-ui/") ||
+                path.startsWith("/v3/api-docs/")) {
+            return true;
+        }
+
+        if ("GET".equalsIgnoreCase(request.getMethod()) &&
+                path.startsWith("/api/cities")) {
+            return true;
+        }
+        return path.startsWith("/api/auth/");
+    }
+
 
     @Override
     protected void doFilterInternal(
@@ -92,7 +109,8 @@ public class JwtAuthenticationFilter
 
         } catch (Exception e) {
 
-            // Invalid JWT
+            System.out.println("JWT Authentication Error: " + e.getMessage());
+
             SecurityContextHolder.clearContext();
         }
 

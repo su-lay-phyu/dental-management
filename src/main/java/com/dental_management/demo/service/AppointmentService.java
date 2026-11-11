@@ -5,8 +5,19 @@ import com.dental_management.demo.model.response.AppointmentResponse;
 import com.dental_management.demo.model.response.AvailableSlotResponse;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public interface AppointmentService {
-    AvailableSlotResponse getAvailableSlots(Long doctorId, Long branchId, Long serviceId, LocalDate date);
-    AppointmentResponse createAppointment(AppointmentRequest request );
+
+    AvailableSlotResponse getAvailableSlots(
+            Long doctorId,
+            Long branchId,
+            List<Long> serviceIds,
+            LocalDate date
+    );
+
+    AppointmentResponse createAppointment(
+            AppointmentRequest request,
+            String userEmail
+    );
 }

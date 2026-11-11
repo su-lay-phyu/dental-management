@@ -72,11 +72,10 @@ public class JwtService {
         return expiration.before(new Date());
     }
 
-
     private SecretKey getSigningKey() {
 
-        return Keys.hmacShaKeyFor(
-                secretKey.getBytes(StandardCharsets.UTF_8)
-        );
+        byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
+
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }

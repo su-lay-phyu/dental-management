@@ -6,7 +6,11 @@ import org.springframework.stereotype.Repository;
 
 import java.time.DayOfWeek;
 import java.util.List;
+
 @Repository
-public interface DoctorScheduleRepository extends JpaRepository<DoctorSchedule,Long> {
-        List<DoctorSchedule> findByDoctorIdAndBranchIdAndDayOfWeek(Long doctorId, Long branchId, DayOfWeek dayOfWeek );
+public interface DoctorScheduleRepository
+        extends JpaRepository<DoctorSchedule, Long> {
+
+        List<DoctorSchedule> findByDoctor_IdAndBranch_IdAndDayOfWeek(Long doctorId, Long branchId,DayOfWeek dayOfWeek);
+        List<DoctorSchedule> findByRoom_IdAndDayOfWeek(Long roomId, DayOfWeek dayOfWeek);
 }

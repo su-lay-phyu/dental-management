@@ -5,6 +5,9 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Entity
 @Table(name="doctors")
@@ -20,6 +23,9 @@ public class Doctor {
     private String License;
     private String email;
     private String phone;
+    @Enumerated(EnumType.STRING)
     private Status status;
-
+    @ManyToMany
+    @JoinTable(name = "doctor_specialties", joinColumns = @JoinColumn(name = "doctor_id"), inverseJoinColumns = @JoinColumn(name = "specialty_id"))
+    private List<Specialties> specialties = new ArrayList<>();
 }

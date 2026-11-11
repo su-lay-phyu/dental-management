@@ -1,0 +1,31 @@
+package com.dental_management.demo.model.request;
+
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+
+@Getter
+@Setter
+public class DoctorScheduleRequest {
+
+    @NotNull(message = "Doctor ID is required")
+    private Long doctorId;
+
+    @NotNull(message = "Branch ID is required")
+    private Long branchId;
+
+    @NotNull(message = "Room ID is required")
+    private Long roomId;
+
+    @NotNull(message = "Day of week is required")
+    private DayOfWeek dayOfWeek;
+
+    @NotNull(message = "Start time is required")
+    private LocalTime startTime;
+
+    @NotNull(message = "End time is required")
+    private LocalTime endTime;
+}
