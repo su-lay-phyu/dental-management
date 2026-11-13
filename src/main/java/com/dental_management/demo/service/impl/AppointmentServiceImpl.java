@@ -53,15 +53,11 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         int totalDuration = getTotalDuration(services);
 
-        List<Doctor> doctors =
-                getAvailableDoctors(branchId, serviceIds);
+        List<Doctor> doctors = getAvailableDoctors(branchId, serviceIds);
 
-        if (doctorId != null) {
-
-            doctors = doctors.stream()
-                    .filter(doctor ->
-                            doctor.getId().equals(doctorId))
-                    .collect(Collectors.toList());
+        if (doctorId != null)
+        {
+            doctors = filterSelectedDoctor(doctorId, doctors);
         }
 
         List<LocalTime> morningSlots =
@@ -83,6 +79,15 @@ public class AppointmentServiceImpl implements AppointmentService {
                         BookingSessionConfig.EVENING_START,
                         BookingSessionConfig.EVENING_END
                 );
+
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Yangon"));
+
+        if (date.equals(today)) {
+            LocalTime now = LocalTime.now(ZoneId.of("Asia/Yangon"));
+
+            morningSlots.removeIf(slot -> !slot.isAfter(now));
+            eveningSlots.removeIf(slot -> !slot.isAfter(now));
+        }
 
         List<AvailableSlotResponse.SessionSlots> sessions =
                 new ArrayList<>();
@@ -132,6 +137,14 @@ public class AppointmentServiceImpl implements AppointmentService {
                     "Appointment start time is required"
             );
         }
+        if (request.getAppointmentDate().equals(LocalDate.now(ZoneId.of("Asia/Yangon")))) {
+
+            LocalTime now = LocalTime.now(ZoneId.of("Asia/Yangon"));
+
+            if (!request.getStartTime().isAfter(now)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot book an appointment in the past");
+            }
+        }
 
         Branch branch =
                 getActiveBranch(request.getBranchId());
@@ -148,6 +161,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         LocalTime endTime =
                 startTime.plusMinutes(totalDuration);
 
+        validateSessionTime(startTime, endTime);
+
         // Find doctors who can perform ALL selected services
         List<Doctor> doctors =
                 getAvailableDoctors(
@@ -158,10 +173,10 @@ public class AppointmentServiceImpl implements AppointmentService {
         // If a specific doctor was selected
         if (request.getDoctorId() != null) {
 
-            doctors = doctors.stream()
-                    .filter(doctor ->
-                            doctor.getId().equals(request.getDoctorId()))
-                    .collect(Collectors.toList());
+            doctors = filterSelectedDoctor(
+                    request.getDoctorId(),
+                    doctors
+            );
         }
 
         // Check which doctors are free at the selected time
@@ -205,15 +220,28 @@ public class AppointmentServiceImpl implements AppointmentService {
                                         "Patient profile not found"
                                 ));
 
+        List<Appointment> patientAppointments =
+                appointmentRepository.findPatientOverlappingAppointments(
+                        patient.getId(),
+                        request.getAppointmentDate(),
+                        startTime,
+                        endTime
+                );
+
+        if (!patientAppointments.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "You already have an appointment at this time"
+            );
+        }
+
         // Create appointment
         Appointment appointment = new Appointment();
 
         appointment.setPatient(patient);
         appointment.setDoctor(selectedDoctor);
         appointment.setBranch(branch);
-        appointment.setAppointmentDate(
-                request.getAppointmentDate()
-        );
+        appointment.setAppointmentDate(request.getAppointmentDate());
         appointment.setStartTime(startTime);
         appointment.setEndTime(endTime);
         appointment.setStatus(Status.SCHEDULED);
@@ -234,8 +262,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             appointment.getServiceItems().add(item);
         }
 
-        Appointment savedAppointment =
-                appointmentRepository.save(appointment);
+        Appointment savedAppointment = appointmentRepository.save(appointment);
 
         return mapToResponse(
                 savedAppointment,
@@ -274,7 +301,11 @@ public class AppointmentServiceImpl implements AppointmentService {
     // 4. Validate appointment date
     private void validateDate(LocalDate date) {
 
-        if (date == null || date.isBefore(LocalDate.now())) {
+        LocalDate today = LocalDate.now(
+                ZoneId.of("Asia/Yangon")
+        );
+
+        if (date == null || date.isBefore(today)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Invalid appointment date"
@@ -557,5 +588,88 @@ public class AppointmentServiceImpl implements AppointmentService {
         );
 
         return response;
+    }
+    private List<Doctor> filterSelectedDoctor(
+            Long doctorId,
+            List<Doctor> availableDoctors) {
+
+        if (doctorId == null) {
+            return availableDoctors;
+        }
+
+        Doctor selectedDoctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Doctor not found"
+                ));
+
+        if (selectedDoctor.getStatus() != Status.ACTIVE) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Selected doctor is not active"
+            );
+        }
+
+        for (Doctor doctor : availableDoctors) {
+            if (doctor.getId().equals(doctorId)) {
+                return List.of(doctor);
+            }
+        }
+
+        throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Selected doctor cannot perform all selected services at this branch"
+        );
+    }
+    private void validateSessionTime(LocalTime startTime, LocalTime endTime)
+    {
+        if (startTime.getSecond() != 0 || startTime.getNano() != 0) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Appointment time must not contain seconds or nanoseconds"
+            );
+        }
+
+        boolean isMorning =
+                !startTime.isBefore(BookingSessionConfig.MORNING_START)
+                        && !endTime.isAfter(BookingSessionConfig.MORNING_END);
+
+        boolean isEvening =
+                !startTime.isBefore(BookingSessionConfig.EVENING_START)
+                        && !endTime.isAfter(BookingSessionConfig.EVENING_END);
+
+        if (!isMorning && !isEvening) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Appointment time must be within morning or evening session"
+            );
+        }
+
+        boolean validInterval =
+                isValidInterval(startTime, BookingSessionConfig.MORNING_START)
+                        || isValidInterval(startTime, BookingSessionConfig.EVENING_START);
+
+        if (!validInterval) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid appointment slot"
+            );
+        }
+    }
+
+    private boolean isValidInterval(
+            LocalTime startTime,
+            LocalTime sessionStart) {
+
+        if (startTime.isBefore(sessionStart)) {
+            return false;
+        }
+
+        long minutes = Duration.between(
+                sessionStart,
+                startTime
+        ).toMinutes();
+
+        return minutes % BookingSessionConfig.SLOT_INTERVAL_MINUTES == 0;
     }
 }

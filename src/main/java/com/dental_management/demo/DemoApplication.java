@@ -35,7 +35,8 @@ public class DemoApplication {
 				admin.setEmail(adminEmail);
 				admin.setPassword(passwordEncoder.encode("Admin@123"));
 				admin.setPhone("09123456789");
-				admin.setRole(RoleName.ADMIN);
+				admin.setRole(RoleName.ROLE_ADMIN);
+				admin.setEmailVerified(true);
 
 				userRepository.save(admin);
 

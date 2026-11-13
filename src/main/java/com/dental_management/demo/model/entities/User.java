@@ -20,4 +20,6 @@ public class User {
     private String phone;
     @Enumerated(EnumType.STRING)
     private RoleName role;
+    @Column(nullable = false)
+    private boolean emailVerified = false;
 }

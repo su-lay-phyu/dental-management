@@ -15,4 +15,19 @@ public interface AppointmentRepository extends JpaRepository<Appointment,Long> {
     List<Appointment> findBookedAppointments(@Param("doctorId") Long doctorId, @Param("appointmentDate") LocalDate appointmentDate );
     @Query("SELECT a FROM Appointment a WHERE a.doctor.id = :doctorId AND a.appointmentDate = :appointmentDate AND a.startTime < :endTime AND a.endTime > :startTime AND a.status <> com.dental_management.demo.model.entities.Status.CANCELLED ")
     List<Appointment> findOverlappingAppointments(@Param("doctorId") Long doctorId, @Param("appointmentDate") LocalDate appointmentDate, @Param("startTime") LocalTime startTime, @Param("endTime") LocalTime endTime );
+
+    @Query("""
+    SELECT a FROM Appointment a
+    WHERE a.patient.id = :patientId
+    AND a.appointmentDate = :appointmentDate
+    AND a.startTime < :endTime
+    AND a.endTime > :startTime
+    AND a.status <> com.dental_management.demo.model.entities.Status.CANCELLED
+""")
+    List<Appointment> findPatientOverlappingAppointments(
+            @Param("patientId") Long patientId,
+            @Param("appointmentDate") LocalDate appointmentDate,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime
+    );
 }

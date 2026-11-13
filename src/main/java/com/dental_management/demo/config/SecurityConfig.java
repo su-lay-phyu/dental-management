@@ -28,7 +28,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     private static final String[] WEB_WHITE_LIST_URL = {
-            "/api/cities/**"
+            "/api/cities/**","/api/categories/**","/api/branches/**"
     };
 
     @Bean

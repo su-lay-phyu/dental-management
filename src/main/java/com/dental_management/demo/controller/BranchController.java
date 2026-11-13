@@ -22,7 +22,7 @@ public class BranchController {
     private final BranchService branchService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<BranchResponse> createBranch(
             @Valid @RequestBody BranchRequest request) {
 
@@ -44,6 +44,7 @@ public class BranchController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<BranchResponse> updateBranch(
             @PathVariable Long id,
             @Valid @RequestBody BranchRequest request) {
@@ -64,6 +65,7 @@ public class BranchController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<String> deleteBranch(
             @PathVariable Long id) {
 

@@ -32,13 +32,14 @@ public class CityController {
 
     // Create city
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<City> createCity(@RequestBody CityRequest request) {
         return ResponseEntity.ok(cityService.createCity(request));
     }
 
     // Update city
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<City> updateCity(
             @PathVariable Long id,
             @RequestBody CityRequest request) {
@@ -48,6 +49,7 @@ public class CityController {
 
     // Delete city
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<String> deleteCity(@PathVariable Long id) {
         cityService.deleteCity(id);
         return ResponseEntity.ok("City deleted successfully");
